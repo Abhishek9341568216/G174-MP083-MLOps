@@ -1,0 +1,28 @@
+data:
+  train_path: data/raw/train.csv
+  later_path: data/raw/later.csv
+  holdout_path: data/raw/holdout_features.csv
+
+target: gb_per_day
+
+features:
+  numeric:
+    - age
+    - screen_hours
+    - apps_installed
+    - plan_gb_limit
+    - video_minutes
+    - wifi_hours
+
+  categorical:
+    - phone_tier
+    - circle
+
+model:
+  name: random_forest
+  random_state: 42
+  test_size: 0.2
+
+mlflow:
+  experiment_name: G174_MP083_Mobile_Data
+  tracking_uri: sqlite:///mlflow.db
