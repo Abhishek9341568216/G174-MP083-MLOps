@@ -25,4 +25,4 @@ model:
 
 mlflow:
   experiment_name: G174_MP083_Mobile_Data
-  tracking_uri: sqlite:///mlflow.db
+  tracking_uri: ./mlruns
