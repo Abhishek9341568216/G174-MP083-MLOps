@@ -1,44 +1,63 @@
+import argparse
+
 import pandas as pd
-import yaml
 
-# Load configuration
-with open("params.yaml", "r", encoding="utf-8") as file:
-    config = yaml.safe_load(file)
+from .cleaning import normalize_features
+from .config import load_config
 
-# Load datasets
-train = pd.read_csv(config["data"]["train_path"])
-later = pd.read_csv(config["data"]["later_path"])
-holdout = pd.read_csv(config["data"]["holdout_path"])
 
-# Dataset sizes
-print("\n========== DATASET SHAPES ==========")
-print("Train:", train.shape)
-print("Later:", later.shape)
-print("Holdout:", holdout.shape)
+def main():
+    parser = argparse.ArgumentParser(description="Inspect project dataset quality.")
+    parser.add_argument("--config", default="params.yaml")
+    config = load_config(parser.parse_args().config)
 
-# Column names
-print("\n========== COLUMNS ==========")
-print(train.columns.tolist())
+    # Load datasets
+    train = pd.read_csv(config["data"]["train_path"], dtype={"record_id": "string"})
+    later = pd.read_csv(config["data"]["later_path"], dtype={"record_id": "string"})
+    holdout = pd.read_csv(config["data"]["holdout_path"], dtype={"record_id": "string"})
 
-# Missing values
-print("\n========== MISSING VALUES ==========")
-print(train.isnull().sum())
+    # Dataset sizes
+    print("\n========== DATASET SHAPES ==========")
+    print("Train:", train.shape)
+    print("Later:", later.shape)
+    print("Holdout:", holdout.shape)
 
-# Duplicate rows
-print("\n========== DUPLICATE ROWS ==========")
-print(train.duplicated().sum())
+    # Column names
+    print("\n========== COLUMNS ==========")
+    print(train.columns.tolist())
 
-# Numerical statistics
-print("\n========== NUMERICAL SUMMARY ==========")
-print(train.describe().to_string())
+    # Missing values
+    print("\n========== MISSING VALUES ==========")
+    print(train.isnull().sum())
 
-# Categorical values
-print("\n========== PHONE TIER VALUES ==========")
-print(train["phone_tier"].value_counts(dropna=False))
+    # Duplicate rows
+    print("\n========== DUPLICATE ROWS ==========")
+    print(train.duplicated().sum())
 
-print("\n========== CIRCLE VALUES ==========")
-print(train["circle"].value_counts(dropna=False))
+    # Numerical statistics
+    print("\n========== NUMERICAL SUMMARY ==========")
+    print(train.describe().to_string())
 
-# Compare train and holdout columns
-print("\n========== COLUMNS NOT IN HOLDOUT ==========")
-print(set(train.columns) - set(holdout.columns))
+    # Categorical values
+    print("\n========== PHONE TIER VALUES ==========")
+    print(train["phone_tier"].value_counts(dropna=False))
+
+    print("\n========== CIRCLE VALUES ==========")
+    print(train["circle"].value_counts(dropna=False))
+
+    # Compare train and holdout columns
+    print("\n========== COLUMNS NOT IN HOLDOUT ==========")
+    print(set(train.columns) - set(holdout.columns))
+
+    print("\n========== CROSS-DATASET OVERLAP ==========")
+    train_profiles = set(pd.util.hash_pandas_object(normalize_features(train), index=False))
+    for name, frame in (("later", later), ("holdout", holdout)):
+        profiles = set(pd.util.hash_pandas_object(normalize_features(frame), index=False))
+        print(f"Train/{name} identical normalized profiles: {len(train_profiles & profiles)}")
+        if "record_id" in train and "record_id" in frame:
+            ids = set(train["record_id"].dropna()) & set(frame["record_id"].dropna())
+            print(f"Train/{name} matching record IDs: {len(ids)}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,8 @@
+*
+!Dockerfile
+!requirements-api.txt
+!app/
+!app/*.py
+!src/
+!src/mp083/
+!src/mp083/*.py
