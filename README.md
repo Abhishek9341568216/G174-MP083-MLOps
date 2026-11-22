@@ -1,6 +1,6 @@
 # G174-MP083 · Mobile Data Consumption Prediction
 
-SCSE3040 MLOps mini project by Abhishek Aanand and Bipasha. The goal is to estimate mobile data consumption in GB per day from usage, subscription and device characteristics.
+SCSE3040 MLOps mini project . The goal is to estimate mobile data consumption in GB per day from usage, subscription and device characteristics.
 
 The prediction contract uses `age`, `screen_hours`, `apps_installed`, `plan_gb_limit`, `video_minutes`, `wifi_hours`, `phone_tier` and `circle`. The target is `gb_per_day`. The training CSV is labeled, the later CSV is used to monitor distribution changes, and the holdout CSV supplies features for prediction. The billing-derived `gb_from_monthly_bill` could encode the target and is excluded by the feature allowlist. Dates and record IDs are also excluded as predictors.
 
