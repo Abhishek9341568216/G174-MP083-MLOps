@@ -22,7 +22,18 @@ model:
   name: random_forest
   random_state: 42
   test_size: 0.2
+  n_estimators: 100
 
 mlflow:
   experiment_name: G174_MP083_Mobile_Data
   tracking_uri: ./mlruns
+monitoring:
+  numeric_ks: 0.2
+  categorical_tv: 0.2
+  missing_delta: 0.1
+
+evaluation:
+  min_group_size: 10
+  min_retrain_rows: 30
+  min_mae_improvement: 0.0
+  max_rmse_increase: 0.0

@@ -3,3 +3,13 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .env
+.ruff_cache/
+models/
+mlruns/
+mlartifacts/
+*.db
+*.db-*
+*.sqlite*
+reports/*.json
+predictions/
+reports/train_prepared.csv
