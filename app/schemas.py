@@ -1,7 +1,22 @@
-from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, StringConstraints
+
 from typing import Annotated
 
-Label = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FiniteFloat,
+    StringConstraints,
+)
+
+Label = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=100,
+    ),
+]
 
 
 class PredictionInput(BaseModel):
@@ -20,3 +35,14 @@ class PredictionInput(BaseModel):
 class PredictionOutput(BaseModel):
     gb_per_day: FiniteFloat
     model_version: str
+
+
+class BatchPredictionInput(BaseModel):
+    records: list[PredictionInput] = Field(
+        min_length=1,
+        max_length=100,
+    )
+
+
+class BatchPredictionOutput(BaseModel):
+    predictions: list[PredictionOutput]
