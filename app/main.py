@@ -11,7 +11,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from .model_loader import load_model
-from .schemas import PredictionInput, PredictionOutput
+from .schemas import (
+    PredictionInput,
+    PredictionOutput,
+    BatchPredictionInput,
+    BatchPredictionOutput,
+)
 
 logger = logging.getLogger("mp083.api")
 logger.setLevel(logging.INFO)
@@ -99,6 +104,44 @@ def predict(payload: PredictionInput, request: Request):
     except Exception as error:
         request.state.error_type = type(error).__name__
         raise HTTPException(500, "Prediction failed") from None
+@app.post(
+    "/predict/batch",
+    response_model=BatchPredictionOutput,
+)
+def predict_batch(payload: BatchPredictionInput, request: Request):
+    pipeline, metadata = ready_model(request)
+
+    try:
+        records = [
+            record.model_dump()
+            for record in payload.records
+        ]
+
+        predictions = pipeline.predict(pd.DataFrame(records))
+
+        if len(predictions) != len(records):
+            raise ValueError("Unexpected prediction count")
+
+        if not np.isfinite(predictions).all():
+            raise ValueError("Invalid prediction values")
+
+        results = [
+            PredictionOutput(
+                gb_per_day=float(value),
+                model_version=metadata["version"],
+            )
+            for value in predictions
+        ]
+
+        return BatchPredictionOutput(predictions=results)
+
+    except Exception as error:
+        request.state.error_type = type(error).__name__
+        raise HTTPException(
+            500,
+            "Batch prediction failed",
+        ) from None
+
 
 
 @app.get("/model-info")
