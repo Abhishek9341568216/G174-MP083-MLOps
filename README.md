@@ -124,6 +124,32 @@ Invoke-RestMethod http://localhost:8000/predict -Method Post -ContentType applic
 
 The response includes `gb_per_day` and the model version. Application events carry JSON messages with a timestamp, level and event name. Request completions include a request ID, duration, HTTP status and prediction status where applicable. Client bodies and raw error text are excluded.
 
+
+### Batch prediction
+
+The `/predict/batch` endpoint accepts multiple prediction records in a single request. It returns one prediction for each input record, along with the loaded model version.
+
+Linux:
+
+```bash
+curl -sS http://localhost:8000/predict/batch \
+  -H 'Content-Type: application/json' \
+  -d '{"records":[{"age":25,"screen_hours":6,"apps_installed":42,"plan_gb_limit":3,"video_minutes":75,"wifi_hours":4,"phone_tier":"mid","circle":"north"},{"age":30,"screen_hours":5,"apps_installed":35,"plan_gb_limit":4,"video_minutes":60,"wifi_hours":3,"phone_tier":"basic","circle":"south"}]}'
+```
+
+PowerShell:
+
+```powershell
+$records = @(
+    @{age=25; screen_hours=6; apps_installed=42; plan_gb_limit=3; video_minutes=75; wifi_hours=4; phone_tier="mid"; circle="north"},
+    @{age=30; screen_hours=5; apps_installed=35; plan_gb_limit=4; video_minutes=60; wifi_hours=3; phone_tier="basic"; circle="south"}
+)
+$body = @{records=$records} | ConvertTo-Json -Depth 5
+Invoke-RestMethod http://localhost:8000/predict/batch -Method Post -ContentType application/json -Body $body
+```
+
+The batch endpoint accepts between 1 and 100 records per request.
+
 ## Docker and Kubernetes
 
 Build the image, then mount the complete model store read-only. On Linux, make the host path readable by UID 10001.
