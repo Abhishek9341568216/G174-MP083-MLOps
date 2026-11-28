@@ -49,3 +49,50 @@ def test_failed_model_startup_exposes_readiness_error(tmp_path, monkeypatch, api
         assert client.get("/model-info").status_code == 503
         assert client.post("/predict", json=sample[COLUMNS].iloc[0].to_dict()).status_code == 503
     assert "model_load_failed" in api_logs.text
+
+
+def test_batch_prediction_api(approved, sample, monkeypatch):
+    models, version, _ = approved
+    monkeypatch.setenv("MODEL_DIR", str(models))
+
+    with TestClient(app) as client:
+        records = sample[COLUMNS].iloc[:3].to_dict(
+            orient="records"
+        )
+
+        response = client.post(
+            "/predict/batch",
+            json={"records": records},
+        )
+
+        assert response.status_code == 200
+
+        result = response.json()["predictions"]
+
+        assert len(result) == 3
+
+        for item in result:
+            assert item["gb_per_day"] >= 0
+            assert item["model_version"] == version
+
+
+def test_batch_prediction_rejects_empty_and_large_batches(
+    approved,
+    monkeypatch,
+):
+    models, _, _ = approved
+    monkeypatch.setenv("MODEL_DIR", str(models))
+
+    with TestClient(app) as client:
+        empty = client.post(
+            "/predict/batch",
+            json={"records": []},
+        )
+        assert empty.status_code == 422
+
+        oversized = client.post(
+            "/predict/batch",
+            json={"records": [{}] * 101},
+        )
+        assert oversized.status_code == 422
+
